@@ -1,0 +1,44 @@
+﻿# Gradle
+.gradle/
+build/
+out/
+classes/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+bin/
+.vscode/
+
+# Eclipse
+eclipse/
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Minecraft / NeoForge run configs
+run/
+runs/
+logs/
+crash-reports/
+debug.log
+latest.log
+
+# Generated
+src/generated/
+src/main/resources/META-INF/neoforge.mods.toml
+
+# Local mod JARs (compile-only; keep README)
+libs/*.jar
+
+# Misc
+*.log
+*.cache

@@ -1,0 +1,10 @@
+{
+  "categories": {
+    "food": ["minecraft:bread", "minecraft:wheat", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:apple", "minecraft:cooked_beef"],
+    "fuel": ["minecraft:coal", "minecraft:charcoal", "minecraft:coal_block"],
+    "materials": ["minecraft:iron_ingot", "minecraft:copper_ingot", "minecraft:gold_ingot", "minecraft:oak_log", "minecraft:cobblestone"],
+    "textiles": ["minecraft:wool", "minecraft:string", "minecraft:leather"],
+    "tools": ["minecraft:iron_pickaxe", "minecraft:iron_axe", "minecraft:iron_shovel"]
+  },
+  "default_category": "misc"
+}

@@ -1,0 +1,16 @@
+﻿{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.bng.marketcoordination.integration.vc.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MarketLedgerManagerMixin",
+    "MarketLedgerManagerRecordMixin",
+    "CommonEventsStallSelectionMixin"
+  ],
+  "client": [],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

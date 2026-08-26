@@ -1,0 +1,8 @@
+{
+  "food": 0.25,
+  "fuel": 0.15,
+  "materials": 0.25,
+  "textiles": 0.10,
+  "tools": 0.15,
+  "misc": 0.10
+}

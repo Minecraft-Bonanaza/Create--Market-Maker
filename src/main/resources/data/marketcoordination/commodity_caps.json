@@ -1,0 +1,9 @@
+{
+  "default_daily_cap": 64,
+  "overrides": {
+    "minecraft:bread": 64,
+    "minecraft:wheat": 128,
+    "minecraft:coal": 64,
+    "minecraft:iron_ingot": 32
+  }
+}

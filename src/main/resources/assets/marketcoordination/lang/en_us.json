@@ -1,0 +1,6 @@
+﻿{
+  "itemGroup.marketcoordination": "Market Coordination",
+  "commands.marketcoord.info": "Show market coordination info",
+  "commands.marketcoord.list": "List registered markets",
+  "screen.marketcoordination.summary.title": "Market Summary"
+}
