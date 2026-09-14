@@ -2,7 +2,7 @@
 
 A **NeoForge 1.21.1** mod that turns [Create: Villager Commerce](https://www.curseforge.com/minecraft/mc-mods/create-villager-commerce) stalls into a living, server-authoritative economy. Villagers shop with real budgets, prices respond to demand, markets grow and decay based on activity, and everything is priced in [Create: Numismatics](https://modrinth.com/mod/numismatics) currency. When [Create: Stock Market](https://modrinth.com/mod/create-stock-market) is present, stalls are indexed into a global price board with a per-player trade-volume graph.
 
-**Version:** `0.5.0` · **Minecraft:** 1.21.1 · **Loader:** NeoForge 21.1.x · **License:** LGPL-3.0
+**Version:** `0.9.26` · **Minecraft:** 1.21.1 · **Loader:** NeoForge 21.1.x · **License:** LGPL-3.0
 
 > Built for the **Brave New Globe** pack, but it works in any 1.21.1 NeoForge pack that includes the required dependencies below.
 
@@ -39,7 +39,7 @@ A **NeoForge 1.21.1** mod that turns [Create: Villager Commerce](https://www.cur
 
 1. Install NeoForge `21.1.x` for Minecraft `1.21.1`.
 2. Drop the required dependency jars into your `mods/` folder.
-3. Drop `marketcoordination-0.5.0.jar` into `mods/`.
+3. Drop `marketcoordination-0.9.26.jar` into `mods/`.
 4. (Optional) Add Create: Stock Market for global pricing and the Volume graph.
 
 ---
@@ -93,7 +93,7 @@ Requirements: JDK 21 (the build is pinned to run on JDK 24 via `org.gradle.java.
 .\gradlew.bat build
 ```
 
-Output: `build/libs/marketcoordination-0.5.0.jar`
+Output: `build/libs/marketcoordination-0.9.26.jar`
 
 For compile-time mixin/API work against Villager Commerce and Stock Market, drop their jars into `libs/` (see `libs/README.txt`). They are `compileOnly` and never bundled.
 
@@ -111,10 +111,10 @@ Each GitHub release attaches `marketcoordination-<version>.jar`. To add it to a 
 
 ```bash
 packwiz url add marketcoordination \
-  "https://github.com/Minecraft-Bonanaza/Create--Market-Maker/releases/download/v0.5.0/marketcoordination-0.5.0.jar"
+  "https://github.com/Minecraft-Bonanaza/Create--Market-Maker/releases/download/v0.9.26/marketcoordination-0.9.26.jar"
 ```
 
-packwiz will download the jar, compute its hash, and write `mods/marketcoordination.pw.toml`. A ready-made, drop-in copy of that file (with the correct `sha512` for v0.5.0) is provided in [`packwiz/mods/marketcoordination.pw.toml`](packwiz/mods/marketcoordination.pw.toml) — copy it into your pack's `mods/` directory and run `packwiz refresh`.
+packwiz will download the jar, compute its hash, and write `mods/marketcoordination.pw.toml`. A ready-made, drop-in copy of that file (with the correct `sha512` for v0.9.26) is provided in [`packwiz/mods/marketcoordination.pw.toml`](packwiz/mods/marketcoordination.pw.toml) — copy it into your pack's `mods/` directory and run `packwiz refresh`.
 
 ---
 

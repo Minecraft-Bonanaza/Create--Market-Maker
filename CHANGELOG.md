@@ -3,6 +3,10 @@
 All notable changes to Create: Market Maker are documented here. This project follows a
 loose [semantic versioning](https://semver.org/) scheme for a Minecraft mod.
 
+## [0.9.26] - 2026-09-14
+
+Pack-aligned release of the 0.5.0 feature set for Brave New Globe `0.9.26`. Same gameplay as 0.5.0; version string matches the pack.
+
 ## [0.5.0] - 2026-09-14
 
 First public release.
