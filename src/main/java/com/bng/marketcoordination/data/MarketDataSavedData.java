@@ -47,6 +47,9 @@ public class MarketDataSavedData extends SavedData {
                 data.markets.put(state.id(), state);
             }
         }
+        if (tag.contains("traderHistory")) {
+            com.bng.marketcoordination.MarketServices.TRADER_HISTORY.importFromTag(tag.getCompound("traderHistory"));
+        }
         return data;
     }
 
@@ -57,6 +60,9 @@ public class MarketDataSavedData extends SavedData {
             list.add(serializeMarket(state));
         }
         tag.put("markets", list);
+        CompoundTag traderHistory = new CompoundTag();
+        com.bng.marketcoordination.MarketServices.TRADER_HISTORY.writeToTag(traderHistory);
+        tag.put("traderHistory", traderHistory);
         return tag;
     }
 
@@ -86,6 +92,7 @@ public class MarketDataSavedData extends SavedData {
         tag.putLong("createdAtEpochMs", state.createdAt().toEpochMilli());
         tag.putDouble("activityScore", state.activityScore());
         tag.putDouble("previousActivityScore", state.previousActivityScore());
+        tag.putDouble("peakActivityScore", state.peakActivityScore());
         tag.putString("tier", state.tier().name());
         tag.putLong("dailyBudgetSpurs", state.dailyBudgetSpurs());
         tag.putLong("spentTodaySpurs", state.spentTodaySpurs());
@@ -102,6 +109,9 @@ public class MarketDataSavedData extends SavedData {
         CompoundTag regionalTag = new CompoundTag();
         state.regionalProfile().writeToTag(regionalTag);
         tag.put("regionalProfile", regionalTag);
+        CompoundTag tradersTag = new CompoundTag();
+        state.traders().writeToTag(tradersTag);
+        tag.put("traders", tradersTag);
         return tag;
     }
 
@@ -123,6 +133,10 @@ public class MarketDataSavedData extends SavedData {
         if (tag.contains("previousActivityScore")) {
             state.setPreviousActivityScore(tag.getDouble("previousActivityScore"));
         }
+        // Seed the high-water mark from the current score for saves created before this field existed.
+        state.setPeakActivityScore(tag.contains("peakActivityScore")
+                ? tag.getDouble("peakActivityScore")
+                : state.activityScore());
         if (tag.contains("tier")) {
             state.setTier(MarketTier.valueOf(tag.getString("tier")));
         }
@@ -144,6 +158,9 @@ public class MarketDataSavedData extends SavedData {
         }
         if (tag.contains("regionalProfile")) {
             state.regionalProfile().importFromTag(tag.getCompound("regionalProfile"));
+        }
+        if (tag.contains("traders")) {
+            state.traders().importFromTag(tag.getCompound("traders"));
         }
         return state;
     }

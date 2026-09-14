@@ -53,6 +53,9 @@ public final class MarketDayCycleHandler {
         MarketServices.COMMODITY_CAPS.resetDaily();
         MarketServices.CATEGORY_BUDGET.resetDaily();
         MarketServices.ANTI_ABUSE.resetDaily();
+        MarketServices.VILLAGER_BUDGET.resetDaily();
+        // Roll each player's current-day volume into the graph history before the new day begins.
+        MarketServices.TRADER_HISTORY.finalizeDay();
         pendingMarkets = new ArrayList<>(MarketRegistry.all());
         staggerIndex = 0;
         if (pendingMarkets.isEmpty()) {

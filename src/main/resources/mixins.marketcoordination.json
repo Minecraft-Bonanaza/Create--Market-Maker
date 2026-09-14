@@ -1,4 +1,4 @@
-﻿{
+{
   "required": true,
   "minVersion": "0.8",
   "package": "com.bng.marketcoordination.integration.vc.mixin",
@@ -6,7 +6,11 @@
   "mixins": [
     "MarketLedgerManagerMixin",
     "MarketLedgerManagerRecordMixin",
-    "CommonEventsStallSelectionMixin"
+    "CommonEventsStallSelectionMixin",
+    "CommonEventsStallValidityMixin",
+    "CommonEventsCompletePurchaseMixin",
+    "MerchantStallStockMixin",
+    "MerchantStallFoodMatchMixin"
   ],
   "client": [],
   "server": [],

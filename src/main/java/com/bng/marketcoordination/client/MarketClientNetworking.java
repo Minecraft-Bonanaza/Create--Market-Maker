@@ -1,6 +1,7 @@
 package com.bng.marketcoordination.client;
 
 import com.bng.marketcoordination.network.MarketSummaryPayload;
+import com.bng.marketcoordination.network.TraderHistoryPayload;
 import com.bng.marketcoordination.ui.MarketSummary;
 import com.bng.marketcoordination.ui.client.MarketSummaryScreen;
 import net.minecraft.client.Minecraft;
@@ -19,5 +20,9 @@ public final class MarketClientNetworking {
                 minecraft.setScreen(new MarketSummaryScreen(summary));
             }
         });
+    }
+
+    public static void handleTraderHistory(TraderHistoryPayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> ClientTraderHistory.set(payload.series()));
     }
 }

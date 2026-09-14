@@ -1,4 +1,4 @@
-﻿modLoader="javafml"
+modLoader="javafml"
 loaderVersion="${loader_version_range}"
 license="${mod_license}"
 
@@ -12,6 +12,9 @@ Server-authoritative market coordination for Brave New Globe: budgets, growth, a
 
 [[mixins]]
 config="mixins.marketcoordination.json"
+
+[[mixins]]
+config="mixins.marketcoordination.stockmarket.json"
 
 [[dependencies.${mod_id}]]
     modId="neoforge"
@@ -30,7 +33,7 @@ config="mixins.marketcoordination.json"
 [[dependencies.${mod_id}]]
     modId="create"
     type="required"
-    versionRange="[${create_version},)"
+    versionRange="[6.0.9,6.1.0)"
     ordering="AFTER"
     side="BOTH"
 

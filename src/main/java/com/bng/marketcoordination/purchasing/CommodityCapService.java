@@ -22,6 +22,19 @@ public class CommodityCapService {
         return Math.max(0, CommodityCapConfig.dailyCap(item) - purchasedToday(marketId, item));
     }
 
+    /**
+     * Fraction (0..1) of this item's daily unit cap already purchased today. Used by the demand
+     * curve so willingness-to-pay for an item falls the more of it has been bought.
+     */
+    public double capFillFraction(MarketId marketId, Item item) {
+        int cap = CommodityCapConfig.dailyCap(item);
+        if (cap <= 0) {
+            return 1.0;
+        }
+        double fill = (double) purchasedToday(marketId, item) / (double) cap;
+        return Math.max(0.0, Math.min(1.0, fill));
+    }
+
     public void recordPurchase(MarketId marketId, Item item, int quantity) {
         if (quantity <= 0) {
             return;

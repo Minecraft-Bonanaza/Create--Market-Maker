@@ -31,6 +31,46 @@ public final class MarketNetworking {
                 MarketSummaryRequestPayload.STREAM_CODEC,
                 MarketNetworking::handleSummaryRequest
         );
+        registrar.playToServer(
+                StallConfigSavePayload.TYPE,
+                StallConfigSavePayload.STREAM_CODEC,
+                MarketNetworking::handleStallConfigSave
+        );
+        registrar.playToClient(
+                TraderHistoryPayload.TYPE,
+                TraderHistoryPayload.STREAM_CODEC,
+                MarketClientNetworking::handleTraderHistory
+        );
+        registrar.playToServer(
+                TraderHistoryRequestPayload.TYPE,
+                TraderHistoryRequestPayload.STREAM_CODEC,
+                MarketNetworking::handleTraderHistoryRequest
+        );
+    }
+
+    public static void handleTraderHistoryRequest(TraderHistoryRequestPayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
+            // Top players keep the graph readable and the packet small.
+            player.connection.send(new net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket(
+                    new TraderHistoryPayload(
+                            com.bng.marketcoordination.MarketServices.TRADER_HISTORY.snapshot(8))
+            ));
+        });
+    }
+
+    public static void handleStallConfigSave(StallConfigSavePayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (!(context.player() instanceof ServerPlayer player)) {
+                return;
+            }
+            if (player.containerMenu instanceof com.bng.marketcoordination.menu.StallConfigMenu menu
+                    && menu.stillValid(player)) {
+                menu.applyToStall(payload.saleQuantity(), payload.priceSpurs());
+            }
+        });
     }
 
     public static void handleSummaryRequest(MarketSummaryRequestPayload payload, IPayloadContext context) {

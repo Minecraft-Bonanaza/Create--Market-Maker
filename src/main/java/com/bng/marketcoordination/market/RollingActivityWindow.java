@@ -90,6 +90,20 @@ public class RollingActivityWindow {
         return total;
     }
 
+    public double averageDailyVolumeSpurs() {
+        long total = currentVolume;
+        int count = 1;
+        for (int i = 0; i < size; i++) {
+            int index = (head - 1 - i + capacity) % capacity;
+            DaySnapshot snapshot = days[index];
+            if (snapshot != null) {
+                total += snapshot.tradeVolumeSpurs();
+                count++;
+            }
+        }
+        return total / (double) count;
+    }
+
     public double averageUniqueSellers() {
         return averageInt(snapshot -> snapshot.uniqueSellers());
     }

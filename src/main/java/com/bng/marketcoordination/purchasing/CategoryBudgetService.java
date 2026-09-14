@@ -49,6 +49,19 @@ public final class CategoryBudgetService {
                 .getOrDefault(category, 0L);
     }
 
+    /**
+     * Fraction (0..1) of this category's daily money quota already spent today. Used by the demand
+     * curve so willingness-to-pay falls as the quota fills.
+     */
+    public double categoryFillFraction(MarketState market, CommodityCategory category) {
+        long budget = categoryBudgetSpurs(market, category);
+        if (budget <= 0L) {
+            return 1.0;
+        }
+        double fill = (double) categorySpent(market, category) / (double) budget;
+        return Math.max(0.0, Math.min(1.0, fill));
+    }
+
     public void resetDaily() {
         spentToday.clear();
     }

@@ -1,10 +1,58 @@
 {
   "categories": {
-    "food": ["minecraft:bread", "minecraft:wheat", "minecraft:carrot", "minecraft:potato", "minecraft:beetroot", "minecraft:apple", "minecraft:cooked_beef"],
-    "fuel": ["minecraft:coal", "minecraft:charcoal", "minecraft:coal_block"],
-    "materials": ["minecraft:iron_ingot", "minecraft:copper_ingot", "minecraft:gold_ingot", "minecraft:oak_log", "minecraft:cobblestone"],
-    "textiles": ["minecraft:wool", "minecraft:string", "minecraft:leather"],
-    "tools": ["minecraft:iron_pickaxe", "minecraft:iron_axe", "minecraft:iron_shovel"]
+    "food": [
+      "minecraft:bread", "minecraft:wheat", "minecraft:carrot", "minecraft:potato", "minecraft:baked_potato",
+      "minecraft:beetroot", "minecraft:apple", "minecraft:golden_apple", "minecraft:golden_carrot",
+      "minecraft:melon_slice", "minecraft:pumpkin", "minecraft:pumpkin_pie", "minecraft:sweet_berries",
+      "minecraft:glow_berries", "minecraft:cooked_beef", "minecraft:cooked_porkchop", "minecraft:cooked_chicken",
+      "minecraft:cooked_mutton", "minecraft:cooked_rabbit", "minecraft:cooked_cod", "minecraft:cooked_salmon",
+      "minecraft:bread", "minecraft:cookie", "minecraft:cake", "minecraft:mushroom_stew", "minecraft:rabbit_stew",
+      "minecraft:beetroot_soup", "minecraft:dried_kelp", "minecraft:egg", "minecraft:sugar", "minecraft:honey_bottle",
+      "minecraft:milk_bucket", "minecraft:sugar_cane", "minecraft:mushroom", "minecraft:brown_mushroom",
+      "minecraft:red_mushroom", "minecraft:kelp"
+    ],
+    "fuel": [
+      "minecraft:coal", "minecraft:charcoal", "minecraft:coal_block", "minecraft:blaze_rod", "minecraft:blaze_powder",
+      "minecraft:lava_bucket", "minecraft:dried_kelp_block", "minecraft:bamboo"
+    ],
+    "materials": [
+      "minecraft:iron_ingot", "minecraft:copper_ingot", "minecraft:gold_ingot", "minecraft:netherite_ingot",
+      "minecraft:netherite_scrap", "minecraft:raw_iron", "minecraft:raw_copper", "minecraft:raw_gold",
+      "minecraft:iron_block", "minecraft:copper_block", "minecraft:gold_block", "minecraft:diamond",
+      "minecraft:diamond_block", "minecraft:emerald", "minecraft:emerald_block", "minecraft:lapis_lazuli",
+      "minecraft:redstone", "minecraft:redstone_block", "minecraft:quartz", "minecraft:amethyst_shard",
+      "minecraft:cobblestone", "minecraft:stone", "minecraft:deepslate", "minecraft:cobbled_deepslate",
+      "minecraft:andesite", "minecraft:diorite", "minecraft:granite", "minecraft:tuff", "minecraft:calcite",
+      "minecraft:dirt", "minecraft:sand", "minecraft:red_sand", "minecraft:gravel", "minecraft:clay",
+      "minecraft:clay_ball", "minecraft:flint", "minecraft:obsidian", "minecraft:glass", "minecraft:bricks",
+      "minecraft:brick", "minecraft:netherrack", "minecraft:blackstone", "minecraft:basalt", "minecraft:terracotta",
+      "minecraft:oak_log", "minecraft:spruce_log", "minecraft:birch_log", "minecraft:jungle_log",
+      "minecraft:acacia_log", "minecraft:dark_oak_log", "minecraft:mangrove_log", "minecraft:cherry_log",
+      "minecraft:oak_planks", "minecraft:spruce_planks", "minecraft:birch_planks", "minecraft:jungle_planks",
+      "minecraft:acacia_planks", "minecraft:dark_oak_planks", "minecraft:stick"
+    ],
+    "textiles": [
+      "minecraft:wool", "minecraft:white_wool", "minecraft:black_wool", "minecraft:gray_wool",
+      "minecraft:light_gray_wool", "minecraft:brown_wool", "minecraft:red_wool", "minecraft:orange_wool",
+      "minecraft:yellow_wool", "minecraft:lime_wool", "minecraft:green_wool", "minecraft:cyan_wool",
+      "minecraft:light_blue_wool", "minecraft:blue_wool", "minecraft:purple_wool", "minecraft:magenta_wool",
+      "minecraft:pink_wool", "minecraft:string", "minecraft:leather", "minecraft:rabbit_hide",
+      "minecraft:feather", "minecraft:paper", "minecraft:book"
+    ],
+    "tools": [
+      "minecraft:wooden_pickaxe", "minecraft:stone_pickaxe", "minecraft:iron_pickaxe", "minecraft:golden_pickaxe",
+      "minecraft:diamond_pickaxe", "minecraft:netherite_pickaxe", "minecraft:wooden_axe", "minecraft:stone_axe",
+      "minecraft:iron_axe", "minecraft:golden_axe", "minecraft:diamond_axe", "minecraft:netherite_axe",
+      "minecraft:wooden_shovel", "minecraft:stone_shovel", "minecraft:iron_shovel", "minecraft:golden_shovel",
+      "minecraft:diamond_shovel", "minecraft:netherite_shovel", "minecraft:wooden_hoe", "minecraft:stone_hoe",
+      "minecraft:iron_hoe", "minecraft:golden_hoe", "minecraft:diamond_hoe", "minecraft:netherite_hoe",
+      "minecraft:wooden_sword", "minecraft:stone_sword", "minecraft:iron_sword", "minecraft:golden_sword",
+      "minecraft:diamond_sword", "minecraft:netherite_sword", "minecraft:bow", "minecraft:crossbow",
+      "minecraft:shield", "minecraft:shears", "minecraft:fishing_rod", "minecraft:flint_and_steel",
+      "minecraft:bucket", "minecraft:compass", "minecraft:clock", "minecraft:iron_helmet",
+      "minecraft:iron_chestplate", "minecraft:iron_leggings", "minecraft:iron_boots", "minecraft:diamond_helmet",
+      "minecraft:diamond_chestplate", "minecraft:diamond_leggings", "minecraft:diamond_boots"
+    ]
   },
   "default_category": "misc"
 }

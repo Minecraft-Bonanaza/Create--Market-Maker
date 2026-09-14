@@ -12,11 +12,17 @@ import com.bng.marketcoordination.market.MarketDayCycleHandler;
 import com.bng.marketcoordination.market.MarketDiscoveryHandler;
 import com.bng.marketcoordination.market.MarketRegistry;
 import com.bng.marketcoordination.network.MarketNetworking;
+import com.bng.marketcoordination.integration.vc.StallConfigInteraction;
+import com.bng.marketcoordination.registry.ModMenus;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppingEvent;
@@ -32,12 +38,18 @@ public class MarketCoordinationMod {
         modContainer.registerConfig(ModConfig.Type.COMMON, MarketCoordConfig.SPEC);
 
         modEventBus.addListener(MarketNetworking::register);
+        ModMenus.register(modEventBus);
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            com.bng.marketcoordination.client.StallConfigClient.init(modEventBus);
+        }
 
         NeoForge.EVENT_BUS.addListener(this::onServerStarting);
         NeoForge.EVENT_BUS.addListener(this::onServerStopping);
         NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> MarketCoordinationCommands.register(event));
         NeoForge.EVENT_BUS.addListener(MarketDayCycleHandler::onServerTick);
         NeoForge.EVENT_BUS.addListener(MarketDiscoveryHandler::onRightClickBlock);
+        NeoForge.EVENT_BUS.addListener(EventPriority.HIGH,
+                (PlayerInteractEvent.RightClickBlock event) -> StallConfigInteraction.onRightClickBlock(event));
         ModPresence.logStartupPresence();
         VcVersionProbe.probe();
     }
@@ -50,6 +62,14 @@ public class MarketCoordinationMod {
         MarketRegistry.init(event.getServer());
         NationRegistry.init(event.getServer().overworld());
         MarketDayCycleHandler.reset();
+
+        // Expose VC merchant stalls to Create Stock Market as vendor shops so they contribute to a
+        // shared global price index (and appear in the Shop List). Runs before SM's ServerStarted
+        // scan and per-tick refresh, so stalls are picked up from the first scan onward.
+        if (ModPresence.isStockMarketLoaded() && ModPresence.isVillagerCommerceLoaded()) {
+            com.bng.marketcoordination.integration.vc.VcVendorHelper.install();
+        }
+
         LOGGER.info("Market Coordination initialized on server start");
     }
 

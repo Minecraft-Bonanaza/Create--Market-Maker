@@ -23,6 +23,14 @@ public final class VcIntegration {
     private VcIntegration() {}
 
     public static boolean allowPurchase(ServerLevel level, MerchantStallBlockEntity stall) {
+        return allowPurchase(level, stall, true);
+    }
+
+    /**
+     * @param log when false, suppresses debug logging. Used by high-frequency callers
+     *            (stall selection, villager shopping-validity checks) to avoid log spam.
+     */
+    public static boolean allowPurchase(ServerLevel level, MerchantStallBlockEntity stall, boolean log) {
         BlockPos ledgerPos = stall.getLinkedMarketLedgerPos();
         if (ledgerPos == null) {
             return true;
@@ -36,24 +44,26 @@ public final class VcIntegration {
             return true;
         }
 
-        if (!passesMarketGates(market.get(), stall)) {
-            return false;
-        }
-
-        return true;
+        return passesMarketGates(market.get(), stall, log);
     }
 
     public static boolean passesMarketGates(MarketState market, MerchantStallBlockEntity stall) {
+        return passesMarketGates(market, stall, true);
+    }
+
+    public static boolean passesMarketGates(MarketState market, MerchantStallBlockEntity stall, boolean log) {
         long spurCost = offerSpurCost(stall);
         if (spurCost <= 0L) {
             return true;
         }
 
         if (!MarketServices.BUDGET.canAfford(market, spurCost)) {
-            MarketCoordinationMod.LOGGER.debug(
-                    "Blocked VC purchase for {} — insufficient budget (need {} spurs)",
-                    market.displayName(),
-                    spurCost);
+            if (log) {
+                MarketCoordinationMod.LOGGER.debug(
+                        "Blocked VC purchase for {} — insufficient budget (need {} spurs)",
+                        market.displayName(),
+                        spurCost);
+            }
             return false;
         }
 
@@ -61,28 +71,44 @@ public final class VcIntegration {
         if (!saleItem.isEmpty()) {
             CommodityCategory category = CommodityCategoryRegistry.categoryOf(saleItem.getItem());
             if (!MarketServices.CATEGORY_BUDGET.canAfford(market, category, spurCost)) {
-                MarketCoordinationMod.LOGGER.debug(
-                        "Blocked VC purchase for {} — category {} budget exhausted",
-                        market.displayName(),
-                        category.id());
+                if (log) {
+                    MarketCoordinationMod.LOGGER.debug(
+                            "Blocked VC purchase for {} — category {} budget exhausted",
+                            market.displayName(),
+                            category.id());
+                }
                 return false;
             }
 
             if (MarketServices.COMMODITY_CAPS.isCapReached(market.id(), saleItem.getItem())) {
-                MarketCoordinationMod.LOGGER.debug(
-                        "Blocked VC purchase for {} — commodity cap reached for {}",
-                        market.displayName(),
-                        saleItem.getItem());
+                if (log) {
+                    MarketCoordinationMod.LOGGER.debug(
+                            "Blocked VC purchase for {} — commodity cap reached for {}",
+                            market.displayName(),
+                            saleItem.getItem());
+                }
                 return false;
             }
 
             long reference = StockMarketAdapter.referenceSpurs(market.id(), saleItem).orElse(spurCost);
-            if (!MarketServices.CEILING.isWithinCeiling(spurCost, reference)) {
-                MarketCoordinationMod.LOGGER.debug(
-                        "Blocked VC purchase for {} — price {} spurs above ceiling (ref {})",
-                        market.displayName(),
-                        spurCost,
-                        reference);
+            // Diminishing demand: as this commodity's daily quota fills, willingness-to-pay per unit
+            // slides down from the max multiplier toward the demand floor, so the market effectively
+            // expects more quantity per spur the more it has already bought and pricier stalls drop
+            // out first. At an empty quota this equals the flat ceiling (no early impact).
+            double saturation = MarketServices.DEMAND.saturation(market, category, saleItem.getItem());
+            long ceiling = MarketServices.DEMAND.ceilingSpurs(reference, saturation);
+            if (spurCost > ceiling) {
+                if (log) {
+                    MarketCoordinationMod.LOGGER.debug(
+                            "Blocked VC purchase for {} — price {} spurs above demand ceiling {} "
+                                    + "(ref {}, {} quota {}% full)",
+                            market.displayName(),
+                            spurCost,
+                            ceiling,
+                            reference,
+                            category.id(),
+                            Math.round(saturation * 100.0));
+                }
                 return false;
             }
         }
@@ -107,6 +133,10 @@ public final class VcIntegration {
             if (spurCost > 0L) {
                 MarketServices.BUDGET.spend(market, spurCost);
                 MarketServices.CATEGORY_BUDGET.spend(market, category, spurCost);
+                // Attribute the sale to the stall's real owner so we can report per-player volume/profit.
+                market.traders().record(stall.getMarketOwnerId(), stall.getMarketOwnerName(), spurCost);
+                // Also feed the global per-player daily history that backs the trade-volume graph.
+                MarketServices.TRADER_HISTORY.record(stall.getMarketOwnerId(), stall.getMarketOwnerName(), spurCost);
                 double growthWeight = MarketServices.ANTI_ABUSE.growthWeight(
                         level.getGameTime(),
                         market.id(),

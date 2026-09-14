@@ -1,6 +1,7 @@
 package com.bng.marketcoordination.command;
 
 import com.bng.marketcoordination.MarketServices;
+import com.bng.marketcoordination.economy.CommodityCategory;
 import com.bng.marketcoordination.economy.NationId;
 import com.bng.marketcoordination.economy.NationRegistry;
 import com.bng.marketcoordination.economy.NationState;
@@ -13,13 +14,22 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
+import com.bng.marketcoordination.economy.TraderLedger;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class MarketCoordinationCommands {
     private static final MarketGrowthService GROWTH = new MarketGrowthService();
@@ -59,15 +69,20 @@ public final class MarketCoordinationCommands {
 
         root.then(Commands.literal("activity")
                 .executes(ctx -> {
-                    for (MarketState market : MarketRegistry.all()) {
-                        double score = GROWTH.computeActivityScore(market);
-                        ctx.getSource().sendSuccess(
-                                () -> Component.literal(market.displayName()
-                                        + ": activity=" + String.format(Locale.ROOT, "%.2f", score * 100) + "%"
-                                        + ", volume=" + NumismaticsAdapter.formatSpurs(
-                                                market.activityWindow().totalTradeVolumeSpurs())
-                                        + ", sellers=" + market.activityWindow().currentDay().uniqueSellers()),
+                    CommandSourceStack source = ctx.getSource();
+                    if (MarketRegistry.count() == 0) {
+                        source.sendSuccess(
+                                () -> Component.literal("No markets registered yet.").withStyle(ChatFormatting.GRAY),
                                 false);
+                        return 0;
+                    }
+                    boolean first = true;
+                    for (MarketState market : MarketRegistry.all()) {
+                        if (!first) {
+                            source.sendSuccess(Component::empty, false);
+                        }
+                        first = false;
+                        sendMarketActivity(source, market);
                     }
                     return MarketRegistry.count();
                 }));
@@ -103,23 +118,46 @@ public final class MarketCoordinationCommands {
 
         root.then(Commands.literal("debug")
                 .executes(ctx -> {
-                    for (MarketState market : MarketRegistry.all()) {
-                        ctx.getSource().sendSuccess(
-                                () -> Component.literal(market.displayName()
-                                        + " budget " + NumismaticsAdapter.formatSpurs(market.spentTodaySpurs())
-                                        + " / " + NumismaticsAdapter.formatSpurs(market.dailyBudgetSpurs())
-                                        + " remaining="
-                                        + NumismaticsAdapter.formatSpurs(MarketServices.BUDGET.remainingSpurs(market))
-                                        + " | issuance daily="
-                                        + NumismaticsAdapter.formatSpurs(market.issuance().dailySpurs())
-                                        + " lifetime="
-                                        + NumismaticsAdapter.formatSpurs(market.issuance().lifetimeSpurs())
-                                        + " | dominant="
-                                        + market.regionalProfile().dominantCategory().id()),
+                    CommandSourceStack source = ctx.getSource();
+                    if (MarketRegistry.count() == 0) {
+                        source.sendSuccess(
+                                () -> Component.literal("No markets registered yet.").withStyle(ChatFormatting.GRAY),
                                 false);
+                        return 0;
+                    }
+                    boolean first = true;
+                    for (MarketState market : MarketRegistry.all()) {
+                        if (!first) {
+                            source.sendSuccess(Component::empty, false);
+                        }
+                        first = false;
+                        sendMarketDebug(source, market);
                     }
                     return MarketRegistry.count();
                 }));
+
+        root.then(Commands.literal("prices")
+                .executes(ctx -> {
+                    CommandSourceStack source = ctx.getSource();
+                    if (!com.bng.marketcoordination.integration.ModPresence.isStockMarketLoaded()) {
+                        source.sendSuccess(
+                                () -> Component.literal("Stock Market is not loaded — no global price index.")
+                                        .withStyle(ChatFormatting.GRAY),
+                                false);
+                        return 0;
+                    }
+                    if (!com.bng.marketcoordination.integration.ModPresence.isVillagerCommerceLoaded()) {
+                        source.sendSuccess(
+                                () -> Component.literal("Villager Commerce is not loaded — no stalls to index.")
+                                        .withStyle(ChatFormatting.GRAY),
+                                false);
+                        return 0;
+                    }
+                    return com.bng.marketcoordination.integration.StockMarketDebug.sendPrices(source);
+                }));
+
+        root.then(Commands.literal("traders")
+                .executes(ctx -> showTraders(ctx.getSource())));
 
         root.then(Commands.literal("nation")
                 .then(Commands.literal("list")
@@ -171,6 +209,138 @@ public final class MarketCoordinationCommands {
         dispatcher.register(root);
     }
 
+    private static void sendMarketDebug(CommandSourceStack source, MarketState market) {
+        source.sendSuccess(
+                () -> Component.literal("\u2550\u2550 " + market.displayName() + " \u2550\u2550")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                false);
+        debugLine(source, "Tier",
+                market.tier().displayName()
+                        + "  (activity " + percent(market.activityScore())
+                        + ", peak " + percent(market.peakActivityScore()) + ")");
+        debugLine(source, "Budget",
+                NumismaticsAdapter.formatSpurs(market.spentTodaySpurs()) + " spent"
+                        + "  /  " + NumismaticsAdapter.formatSpurs(market.dailyBudgetSpurs()) + " daily");
+        debugLine(source, "Remaining",
+                NumismaticsAdapter.formatSpurs(MarketServices.BUDGET.remainingSpurs(market)));
+        debugLine(source, "Utilization", percent(GROWTH.computeBudgetUtilization(market)));
+        debugLine(source, "Issuance",
+                "daily " + NumismaticsAdapter.formatSpurs(market.issuance().dailySpurs())
+                        + "  |  lifetime " + NumismaticsAdapter.formatSpurs(market.issuance().lifetimeSpurs()));
+        debugLine(source, "Trade volume",
+                NumismaticsAdapter.formatSpurs(market.traders().totalVolumeSpurs())
+                        + "  across " + market.traders().traderCount() + " trader(s)");
+        debugLine(source, "Dominant", market.regionalProfile().dominantCategory().id());
+
+        source.sendSuccess(
+                () -> Component.literal("  Baskets (spent / daily budget):").withStyle(ChatFormatting.AQUA),
+                false);
+        for (CommodityCategory category : CommodityCategory.values()) {
+            long spent = MarketServices.CATEGORY_BUDGET.categorySpent(market, category);
+            long budget = MarketServices.CATEGORY_BUDGET.categoryBudgetSpurs(market, category);
+            String line = "    " + category.id() + ": "
+                    + NumismaticsAdapter.formatSpurs(spent) + " / " + NumismaticsAdapter.formatSpurs(budget);
+            ChatFormatting color = spent > 0 ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
+            source.sendSuccess(() -> Component.literal(line).withStyle(color), false);
+        }
+    }
+
+    /** Aggregated per-owner totals across every market, plus a per-market volume breakdown. */
+    private static int showTraders(CommandSourceStack source) {
+        if (MarketRegistry.count() == 0) {
+            source.sendSuccess(
+                    () -> Component.literal("No markets registered yet.").withStyle(ChatFormatting.GRAY),
+                    false);
+            return 0;
+        }
+
+        source.sendSuccess(
+                () -> Component.literal("\u2550\u2550 Trade Ledger \u2550\u2550")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                false);
+
+        // Per-market volume.
+        source.sendSuccess(
+                () -> Component.literal("  Markets (volume / traders):").withStyle(ChatFormatting.AQUA),
+                false);
+        Map<UUID, long[]> byOwner = new HashMap<>(); // id -> [volumeSpurs, trades]
+        Map<UUID, String> names = new HashMap<>();
+        for (MarketState market : MarketRegistry.all()) {
+            TraderLedger ledger = market.traders();
+            String line = "    " + market.displayName() + ": "
+                    + NumismaticsAdapter.formatSpurs(ledger.totalVolumeSpurs())
+                    + "  (" + ledger.traderCount() + " trader(s))";
+            source.sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.WHITE), false);
+            for (TraderLedger.Trader trader : ledger.traders()) {
+                long[] totals = byOwner.computeIfAbsent(trader.id(), id -> new long[2]);
+                totals[0] += trader.volumeSpurs();
+                totals[1] += trader.trades();
+                names.put(trader.id(), trader.name());
+            }
+        }
+
+        // Global leaderboard, highest volume first.
+        source.sendSuccess(
+                () -> Component.literal("  Top traders (volume / profit):").withStyle(ChatFormatting.AQUA),
+                false);
+        if (byOwner.isEmpty()) {
+            source.sendSuccess(
+                    () -> Component.literal(
+                            "    (no attributed trades yet — stalls need an owner and a completed sale)")
+                            .withStyle(ChatFormatting.DARK_GRAY),
+                    false);
+            return 0;
+        }
+
+        List<Map.Entry<UUID, long[]>> ranked = new ArrayList<>(byOwner.entrySet());
+        ranked.sort(Comparator.comparingLong((Map.Entry<UUID, long[]> e) -> e.getValue()[0]).reversed());
+        int rank = 0;
+        for (Map.Entry<UUID, long[]> e : ranked) {
+            if (rank >= 15) {
+                int remaining = ranked.size() - rank;
+                source.sendSuccess(
+                        () -> Component.literal("    ... and " + remaining + " more")
+                                .withStyle(ChatFormatting.DARK_GRAY),
+                        false);
+                break;
+            }
+            rank++;
+            int position = rank;
+            String name = names.getOrDefault(e.getKey(), e.getKey().toString().substring(0, 8));
+            long volume = e.getValue()[0];
+            long trades = e.getValue()[1];
+            String line = "    " + position + ". " + name + " \u2014 "
+                    + NumismaticsAdapter.formatSpurs(volume) + " across " + trades + " trade(s)";
+            source.sendSuccess(() -> Component.literal(line).withStyle(ChatFormatting.GREEN), false);
+        }
+        return ranked.size();
+    }
+
+    private static void sendMarketActivity(CommandSourceStack source, MarketState market) {
+        source.sendSuccess(
+                () -> Component.literal("\u2550\u2550 " + market.displayName() + " \u2550\u2550")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
+                false);
+        debugLine(source, "Activity",
+                percent(market.activityScore()) + "  (peak " + percent(market.peakActivityScore()) + ")");
+        debugLine(source, "Utilization", percent(GROWTH.computeBudgetUtilization(market)) + " of today's budget");
+        debugLine(source, "7d Volume",
+                NumismaticsAdapter.formatSpurs(market.activityWindow().totalTradeVolumeSpurs()));
+        debugLine(source, "Sellers today",
+                String.valueOf(market.activityWindow().currentDay().uniqueSellers()));
+    }
+
+    private static void debugLine(CommandSourceStack source, String label, String value) {
+        source.sendSuccess(
+                () -> Component.literal("  " + label + ": ").withStyle(ChatFormatting.AQUA)
+                        .append(Component.literal(value).withStyle(ChatFormatting.WHITE)),
+                false);
+    }
+
+    private static String percent(double fraction) {
+        return String.format(Locale.ROOT, "%.1f%%", fraction * 100);
+    }
+
     private static int showInfo(CommandSourceStack source, String marketName) {
         if (MarketRegistry.count() == 0) {
             source.sendSuccess(() -> Component.literal("No markets registered yet."), false);
@@ -191,13 +361,16 @@ public final class MarketCoordinationCommands {
         }
         MarketState market = match.get();
         source.sendSuccess(
-                () -> Component.literal(market.displayName()
-                        + " | tier=" + market.tier().displayName()
-                        + " | activity=" + (int) Math.round(market.activityScore() * 100) + "%"
-                        + " | budget remaining=" + NumismaticsAdapter.formatSpurs(market.remainingBudgetSpurs())
-                        + " | 7d volume=" + NumismaticsAdapter.formatSpurs(market.activityWindow().totalTradeVolumeSpurs())
-                        + " | specialization=" + market.regionalProfile().dominantCategory().id()),
+                () -> Component.literal("\u2550\u2550 " + market.displayName() + " \u2550\u2550")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
                 false);
+        debugLine(source, "Tier", market.tier().displayName()
+                + "  (activity " + percent(market.activityScore()) + ")");
+        debugLine(source, "Budget remaining",
+                NumismaticsAdapter.formatSpurs(market.remainingBudgetSpurs()));
+        debugLine(source, "7d Volume",
+                NumismaticsAdapter.formatSpurs(market.activityWindow().totalTradeVolumeSpurs()));
+        debugLine(source, "Specialization", market.regionalProfile().dominantCategory().id());
         return 1;
     }
 

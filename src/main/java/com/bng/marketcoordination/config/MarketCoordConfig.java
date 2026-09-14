@@ -53,21 +53,29 @@ public final class MarketCoordConfig {
     }
 
     public static final class GrowthSection {
-        public final ModConfigSpec.DoubleValue tradeVolumeWeight;
-        public final ModConfigSpec.DoubleValue uniqueSellerWeight;
-        public final ModConfigSpec.DoubleValue populationWeight;
-        public final ModConfigSpec.DoubleValue commodityDiversityWeight;
+        public final ModConfigSpec.DoubleValue utilizationGrowthThreshold;
         public final ModConfigSpec.DoubleValue maximumDailyGrowth;
-        public final ModConfigSpec.DoubleValue activityDecayRate;
+        public final ModConfigSpec.DoubleValue maximumDailyDecay;
+        public final ModConfigSpec.DoubleValue decayFloorFraction;
 
         GrowthSection(ModConfigSpec.Builder builder) {
             builder.push("growth");
-            tradeVolumeWeight = builder.defineInRange("trade_volume_weight", 0.40, 0.0, 1.0);
-            uniqueSellerWeight = builder.defineInRange("unique_seller_weight", 0.25, 0.0, 1.0);
-            populationWeight = builder.defineInRange("population_weight", 0.20, 0.0, 1.0);
-            commodityDiversityWeight = builder.defineInRange("commodity_diversity_weight", 0.15, 0.0, 1.0);
-            maximumDailyGrowth = builder.defineInRange("maximum_daily_growth", 0.08, 0.0, 1.0);
-            activityDecayRate = builder.defineInRange("activity_decay_rate", 0.05, 0.0, 1.0);
+            utilizationGrowthThreshold = builder
+                    .comment("Break-even point as a fraction of the daily budget spent.",
+                            "Spending more than this fraction grows the market (scaling up to full",
+                            "growth at 100% utilization); spending less makes it decay.")
+                    .defineInRange("utilization_growth_threshold", 0.50, 0.0, 1.0);
+            maximumDailyGrowth = builder
+                    .comment("Maximum single-day rise in activity score, reached at 100% budget utilization.")
+                    .defineInRange("maximum_daily_growth", 0.08, 0.0, 1.0);
+            maximumDailyDecay = builder
+                    .comment("Maximum single-day fall in activity score, reached at 0% budget utilization.",
+                            "Deliberately smaller than growth so idle/offline days erode progress gently.")
+                    .defineInRange("maximum_daily_decay", 0.02, 0.0, 1.0);
+            decayFloorFraction = builder
+                    .comment("Decay can never push the activity score below this fraction of the market's",
+                            "highest achieved score, so players are not punished for being away a while.")
+                    .defineInRange("decay_floor_fraction", 0.70, 0.0, 1.0);
             builder.pop();
         }
     }
@@ -76,6 +84,9 @@ public final class MarketCoordConfig {
         public final ModConfigSpec.DoubleValue competitivePriceBand;
         public final ModConfigSpec.BooleanValue useStockMarketCeiling;
         public final ModConfigSpec.DoubleValue maximumPriceMultiplier;
+        public final ModConfigSpec.BooleanValue demandCurveEnabled;
+        public final ModConfigSpec.DoubleValue demandFloorMultiplier;
+        public final ModConfigSpec.DoubleValue demandCurveExponent;
 
         PurchasingSection(ModConfigSpec.Builder builder) {
             builder.push("purchasing");
@@ -86,24 +97,47 @@ public final class MarketCoordConfig {
                     .comment("Use Stock Market reference prices when mod is present")
                     .define("use_stock_market_ceiling", true);
             maximumPriceMultiplier = builder
-                    .comment("Maximum allowed price as multiple of reference price")
+                    .comment("Maximum allowed price as multiple of reference price (willingness-to-pay when a commodity's daily quota is empty)")
                     .defineInRange("maximum_price_multiplier", 1.25, 1.0, 10.0);
+            demandCurveEnabled = builder
+                    .comment(
+                            "Enable diminishing demand: as a commodity/category daily quota fills, the",
+                            "acceptable price per unit slides down so the market expects more quantity per",
+                            "unit of money and pricier stalls drop out first.")
+                    .define("demand_curve_enabled", true);
+            demandFloorMultiplier = builder
+                    .comment(
+                            "Price multiplier the willingness-to-pay slides down to as a quota approaches full.",
+                            "Clamped to at most maximum_price_multiplier; e.g. 0.5 means only offers at half the",
+                            "reference price (or cheaper) are still bought once a quota is saturated.")
+                    .defineInRange("demand_floor_multiplier", 0.5, 0.0, 10.0);
+            demandCurveExponent = builder
+                    .comment(
+                            "Shape of the demand falloff. 1.0 = linear; >1 keeps demand high early and drops",
+                            "sharply near full; <1 drops demand quickly then tapers.")
+                    .defineInRange("demand_curve_exponent", 1.0, 0.1, 5.0);
             builder.pop();
         }
     }
 
     public static final class PopulationSection {
-        public final ModConfigSpec.IntValue softCapVillagers;
-        public final ModConfigSpec.DoubleValue sqrtScalingFactor;
+        public final ModConfigSpec.IntValue perVillagerDailySpendCap;
+        public final ModConfigSpec.IntValue maxConcurrentShoppersPerMarket;
 
         PopulationSection(ModConfigSpec.Builder builder) {
             builder.push("population");
-            softCapVillagers = builder
-                    .comment("Villager count at which population contribution saturates")
-                    .defineInRange("soft_cap_villagers", 32, 1, 512);
-            sqrtScalingFactor = builder
-                    .comment("Multiplier applied to sqrt(villagers / softCap) for population score")
-                    .defineInRange("sqrt_scaling_factor", 1.0, 0.1, 5.0);
+            perVillagerDailySpendCap = builder
+                    .comment("Maximum Cogs a single villager may spend per Minecraft day (0 = unlimited).",
+                            "Villagers buy aggressively until they hit this cap, so a larger market",
+                            "budget can only be fully spent by having more villagers — more villagers",
+                            "means more trade volume and therefore more market growth.")
+                    .defineInRange("per_villager_daily_spend_cap", 16, 0, 100000);
+            maxConcurrentShoppersPerMarket = builder
+                    .comment("Soft cap on how many villagers actively path to stalls at once per market.",
+                            "When a market has more registered villagers than this, each one shops",
+                            "proportionally less often so pathfinding cost stays bounded in huge markets.",
+                            "Total daily spend is unaffected below this size; 0 disables the throttle.")
+                    .defineInRange("max_concurrent_shoppers_per_market", 24, 0, 512);
             builder.pop();
         }
     }
