@@ -1,8 +1,8 @@
 name = "Create: Market Maker"
-filename = "marketcoordination-0.5.0.jar"
+filename = "marketcoordination-0.5.1.jar"
 side = "both"
 
 [download]
-url = "https://github.com/Minecraft-Bonanaza/Create--Market-Maker/releases/download/v0.5.0/marketcoordination-0.5.0.jar"
+url = "https://github.com/Minecraft-Bonanaza/Create--Market-Maker/releases/download/v0.5.1/marketcoordination-0.5.1.jar"
 hash-format = "sha512"
-hash = "c02cb42aad460d4982f989cbc629b469321e09035de270434110d00781b0f76a02d3164af428b4d039ec90451f4ea58ba1285f8e83c8c860a6f0ac80bd12c859"
+hash = "cf14e51b7152c31809c0ea65ff8c24d4f5ad49c3b74caf221b401dbd2675b46929e8746528f51bb34fa48552926652d6e437844f5063d68f4964f16877adb73b"
