@@ -12,6 +12,10 @@ loose [semantic versioning](https://semver.org/) scheme for a Minecraft mod.
   handlers now register only on the physical client; the server registers matching
   payload types with no-op handlers so the protocol stays in sync.
 
+## [0.9.26] - 2026-09-14
+
+Pack-aligned release of the 0.5.0 feature set for Brave New Globe `0.9.26`. Same gameplay as 0.5.0; version string matches the pack.
+
 ## [0.5.0] - 2026-09-14
 
 First public release.

@@ -17,7 +17,7 @@ packwiz refresh
 
 ```bash
 packwiz url add marketcoordination \
-  "https://github.com/Minecraft-Bonanaza/Create--Market-Maker/releases/download/v0.5.0/marketcoordination-0.5.0.jar"
+  "https://github.com/Minecraft-Bonanaza/Create--Market-Maker/releases/download/v0.9.26/marketcoordination-0.9.26.jar"
 ```
 
 When bumping versions, update `filename`, the `url` tag, and the `hash` (packwiz does this
