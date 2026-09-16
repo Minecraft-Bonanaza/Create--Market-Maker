@@ -3,6 +3,15 @@
 All notable changes to Create: Market Maker are documented here. This project follows a
 loose [semantic versioning](https://semver.org/) scheme for a Minecraft mod.
 
+## [0.5.1] - 2026-09-15
+
+### Fixed
+- Dedicated-server crash during payload registration: `MarketNetworking.register` bound
+  play-to-client handlers with `MarketClientNetworking::handleSummary`, which loaded
+  `MarketSummaryScreen` (extends client-only `Screen`) on `DEDICATED_SERVER`. Client
+  handlers now register only on the physical client; the server registers matching
+  payload types with no-op handlers so the protocol stays in sync.
+
 ## [0.9.26] - 2026-09-14
 
 Pack-aligned release of the 0.5.0 feature set for Brave New Globe `0.9.26`. Same gameplay as 0.5.0; version string matches the pack.

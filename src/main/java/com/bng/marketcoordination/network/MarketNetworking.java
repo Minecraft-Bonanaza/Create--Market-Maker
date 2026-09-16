@@ -6,10 +6,11 @@ import com.bng.marketcoordination.market.MarketRegistry;
 import com.bng.marketcoordination.market.MarketState;
 import com.bng.marketcoordination.ui.MarketInfoProvider;
 import com.bng.marketcoordination.ui.MarketSummary;
-import com.bng.marketcoordination.client.MarketClientNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
@@ -21,11 +22,24 @@ public final class MarketNetworking {
 
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(MarketCoordinationMod.MOD_ID);
-        registrar.playToClient(
-                MarketSummaryPayload.TYPE,
-                MarketSummaryPayload.STREAM_CODEC,
-                MarketClientNetworking::handleSummary
-        );
+        // playToClient handlers live in client code (they touch Screen). Binding them
+        // here with a method reference loads those classes on dedicated servers and
+        // crashes. Register real handlers only on the physical client; the server
+        // still registers the payload types so the protocol matches.
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            com.bng.marketcoordination.client.MarketClientNetworking.registerClientHandlers(registrar);
+        } else {
+            registrar.playToClient(
+                    MarketSummaryPayload.TYPE,
+                    MarketSummaryPayload.STREAM_CODEC,
+                    (payload, context) -> {}
+            );
+            registrar.playToClient(
+                    TraderHistoryPayload.TYPE,
+                    TraderHistoryPayload.STREAM_CODEC,
+                    (payload, context) -> {}
+            );
+        }
         registrar.playToServer(
                 MarketSummaryRequestPayload.TYPE,
                 MarketSummaryRequestPayload.STREAM_CODEC,
@@ -35,11 +49,6 @@ public final class MarketNetworking {
                 StallConfigSavePayload.TYPE,
                 StallConfigSavePayload.STREAM_CODEC,
                 MarketNetworking::handleStallConfigSave
-        );
-        registrar.playToClient(
-                TraderHistoryPayload.TYPE,
-                TraderHistoryPayload.STREAM_CODEC,
-                MarketClientNetworking::handleTraderHistory
         );
         registrar.playToServer(
                 TraderHistoryRequestPayload.TYPE,
